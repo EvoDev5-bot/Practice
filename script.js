@@ -7,9 +7,18 @@ canvas.height = 700;
 const centerX = canvas.width / 2;
 const centerY = canvas.height / 2;
 
+let layers = 15;
+
 let score = 0;
 
 let isMouseDown = false;
+
+let hitBricks = [];
+
+let bricks = [];
+
+let currentBrickX = 10;
+let currentBrickY = 20;
 
 const ball = {
   x: 200,
@@ -50,6 +59,7 @@ function moveBall() {
 
   if (ball.y + ball.size >= canvas.height) {
     score = 0;
+    hitBricks = [];
   }
   if (
     ball.x + ball.size >= pad.x &&
@@ -59,8 +69,14 @@ function moveBall() {
   ) {
     // ball.dx *= -1;
     ball.dy *= -1;
-    score += 1;
   }
+}
+
+function drawPad() {
+  ctx.fillStyle = "black";
+  ctx.beginPath();
+  ctx.fillRect(pad.x, pad.y, pad.w, pad.h);
+  ctx.fill();
 }
 
 function drawPad() {
@@ -113,6 +129,58 @@ function moveLeft() {
   pad.dx = -1 * pad.speed;
 }
 
+function createLayerOfBricks() {
+  for (let x = 0; x < 7; x++) {
+    bricks.push({
+      x: currentBrickX,
+      y: currentBrickY,
+      h: 25,
+      w: 80,
+      hit: false,
+    });
+    currentBrickX += 100;
+  }
+
+  currentBrickY += 30;
+  currentBrickX = 10;
+}
+
+function drawBricks() {
+  for (let y = 0; y < layers; y++) {
+    createLayerOfBricks();
+  }
+
+  hitBricks.forEach((hitBrickIndex) => {
+    bricks.splice(hitBrickIndex, 1);
+  });
+
+  ctx.fillStyle = "navy";
+  bricks.forEach((brick) => {
+    ctx.beginPath();
+    ctx.fillRect(brick.x, brick.y, brick.w, brick.h);
+    ctx.fill();
+  });
+
+  currentBrickX = 10;
+  currentBrickY = 20;
+}
+
+function detectBrickCollision() {
+  bricks.forEach((brick, index) => {
+    if (
+      ball.x + ball.size >= brick.x &&
+      ball.x <= brick.x + brick.w &&
+      ball.y + ball.size >= brick.y &&
+      ball.y <= brick.y + brick.h
+    ) {
+      ball.y += 20;
+      ball.dy *= -1;
+      hitBricks.push(index);
+      score += 1;
+    }
+  });
+}
+
 function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -121,6 +189,11 @@ function update() {
 
   drawPad();
   movePad();
+
+  drawBricks();
+  detectBrickCollision();
+
+  bricks = [];
 
   document.querySelector("h2").innerText = "Score: " + score;
 
@@ -144,7 +217,7 @@ function increaseBallSpeed() {
 }
 
 function decreaseBallSpeed() {
-  if (ball.dx <= 3) {
+  if (ball.dx <= 3 && ball.dx >= -3) {
     ball.dx = 3;
     ball.dy = 3 * (4 / 5);
   }
@@ -211,38 +284,48 @@ document
   .addEventListener("click", decreasePadSpeed);
 
 document
-  .querySelectorAll("button")[4]
+  .querySelectorAll("button")[5]
   .addEventListener("click", increaseBallSize);
 
 document
-  .querySelectorAll("button")[5]
+  .querySelectorAll("button")[6]
   .addEventListener("click", decreaseBallSize);
 
 document
-  .querySelectorAll("button")[6]
+  .querySelectorAll("button")[7]
   .addEventListener("click", increasePadSize);
 
 document
-  .querySelectorAll("button")[7]
+  .querySelectorAll("button")[8]
   .addEventListener("click", decreasePadSize);
 
+document.querySelectorAll("button")[4].addEventListener("click", function () {
+  if (layers < 12) {
+    layers += 1;
+  }
+});
+
+document.querySelectorAll("button")[9].addEventListener("click", function () {
+  if (layers > 1) {
+    layers -= 1;
+  }
+});
+
+//TO BE ACCESIBLE ON TOUCHSCREEN ALSO
+
 canvas.addEventListener("mousedown", function (e) {
-  console.log(["d", e]);
   isMouseDown = true;
   e.preventDefault;
 });
 
 canvas.addEventListener("mouseup", function (e) {
-  console.log(["u", e]);
   isMouseDown = false;
   e.preventDefault;
 });
 
 canvas.addEventListener("mousemove", function (e) {
-  console.log(["m", e]);
   if (isMouseDown) {
-    console.log(["M", e]);
     pad.x = e.clientX - (window.innerWidth / 2 - 350);
   }
-  //   e.preventDefault;
+  e.preventDefault;
 });
