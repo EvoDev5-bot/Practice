@@ -1,13 +1,17 @@
 const canvas = document.querySelector("#canvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = 700;
-canvas.height = 700;
+canvas.width = 1200;
+canvas.height = 1200;
+
+let gameOn = true;
+
+let impactMusic = new Audio("impact-sound-effect-8-bit-retro-151796.mp3");
 
 const centerX = canvas.width / 2;
 const centerY = canvas.height / 2;
 
-let layers = 15;
+let layers = 5;
 
 let score = 0;
 
@@ -17,22 +21,22 @@ let hitBricks = [];
 
 let bricks = [];
 
-let currentBrickX = 10;
-let currentBrickY = 20;
+let currentBrickX = 200;
+let currentBrickY = 120;
 
 const ball = {
   x: 200,
-  y: 200,
-  size: 40,
-  dx: 5,
-  dy: 4,
+  y: canvas.height - 200,
+  size: 20,
+  dx: 8,
+  dy: -8 * (3 / 4),
 };
 
 const pad = {
-  h: 20,
-  w: 100,
+  h: 10,
+  w: 250,
   x: 200,
-  speed: 6,
+  speed: 10,
   y: canvas.width - 100,
   dx: 0,
 };
@@ -67,16 +71,15 @@ function moveBall() {
     ball.y + ball.size >= pad.y &&
     ball.y <= pad.y + pad.h
   ) {
-    // ball.dx *= -1;
+    // ball.dx *= 1;
     ball.dy *= -1;
+    impactMusic.play();
+    if (ball.x > pad.x && ball.x < pad.x + pad.w / 2 - 50) {
+      ball.dx *= -1;
+    } else if (ball.x > pad.x && ball.x > pad.x + pad.w / 2 + 50) {
+      ball.dx = ball.dx * -1;
+    }
   }
-}
-
-function drawPad() {
-  ctx.fillStyle = "black";
-  ctx.beginPath();
-  ctx.fillRect(pad.x, pad.y, pad.w, pad.h);
-  ctx.fill();
 }
 
 function drawPad() {
@@ -134,15 +137,15 @@ function createLayerOfBricks() {
     bricks.push({
       x: currentBrickX,
       y: currentBrickY,
-      h: 25,
-      w: 80,
+      h: 20,
+      w: 110,
       hit: false,
     });
-    currentBrickX += 100;
+    currentBrickX += 120;
   }
 
-  currentBrickY += 30;
-  currentBrickX = 10;
+  currentBrickY += 120;
+  currentBrickX = 200;
 }
 
 function drawBricks() {
@@ -161,8 +164,8 @@ function drawBricks() {
     ctx.fill();
   });
 
-  currentBrickX = 10;
-  currentBrickY = 20;
+  currentBrickX = 200;
+  currentBrickY = 120;
 }
 
 function detectBrickCollision() {
@@ -173,29 +176,53 @@ function detectBrickCollision() {
       ball.y + ball.size >= brick.y &&
       ball.y <= brick.y + brick.h
     ) {
-      ball.y += 20;
+      //   ball.y += brick.h;s
       ball.dy *= -1;
       hitBricks.push(index);
+      impactMusic.play();
       score += 1;
     }
   });
 }
 
+function win() {
+  document.querySelector("h2").innerText = "You Win! Refresh to start again";
+  gameOn = false;
+}
+
+function drawRed() {
+  ctx.fillStyle = "red";
+  ctx.beginPath();
+  ctx.moveTo(pad.x - 50 + pad.w / 2, pad.y);
+  ctx.fillRect(pad.x - 50 + pad.w / 2, pad.y, 100, pad.h);
+  ctx.fill();
+}
+
 function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  drawCircle();
-  moveBall();
+  if (gameOn) {
+    drawCircle();
+    moveBall();
 
-  drawPad();
-  movePad();
+    drawPad();
+    drawRed();
+    movePad();
 
-  drawBricks();
-  detectBrickCollision();
+    drawBricks();
+    detectBrickCollision();
 
-  bricks = [];
+    bricks = [];
 
-  document.querySelector("h2").innerText = "Score: " + score;
+    document.querySelector("h2").innerText = "Score: " + score;
+
+    if (score == 35) {
+      document.querySelector("h2").innerText =
+        "You Win! Refresh to start again";
+
+      win();
+    }
+  }
 
   requestAnimationFrame(update);
 }
@@ -267,65 +294,57 @@ function increasePadSize() {
   pad.w *= 1.1;
 }
 
-document
-  .querySelectorAll("button")[0]
-  .addEventListener("click", increaseBallSpeed);
+// document
+//   .querySelectorAll("button")[0]
+//   .addEventListener("click", increaseBallSpeed);
 
-document
-  .querySelectorAll("button")[1]
-  .addEventListener("click", decreaseBallSpeed);
+// document
+//   .querySelectorAll("button")[1]
+//   .addEventListener("click", decreaseBallSpeed);
 
-document
-  .querySelectorAll("button")[2]
-  .addEventListener("click", increasePadSpeed);
+// document
+//   .querySelectorAll("button")[2]
+//   .addEventListener("click", increasePadSpeed);
 
-document
-  .querySelectorAll("button")[3]
-  .addEventListener("click", decreasePadSpeed);
+// document
+//   .querySelectorAll("button")[3]
+//   .addEventListener("click", decreasePadSpeed);
 
-document
-  .querySelectorAll("button")[5]
-  .addEventListener("click", increaseBallSize);
+// document
+//   .querySelectorAll("button")[5]
+//   .addEventListener("click", increaseBallSize);
 
-document
-  .querySelectorAll("button")[6]
-  .addEventListener("click", decreaseBallSize);
+// document
+//   .querySelectorAll("button")[6]
+//   .addEventListener("click", decreaseBallSize);
 
-document
-  .querySelectorAll("button")[7]
-  .addEventListener("click", increasePadSize);
+// document
+//   .querySelectorAll("button")[7]
+//   .addEventListener("click", increasePadSize);
 
-document
-  .querySelectorAll("button")[8]
-  .addEventListener("click", decreasePadSize);
+// document
+//   .querySelectorAll("button")[8]
+//   .addEventListener("click", decreasePadSize);
 
-document.querySelectorAll("button")[4].addEventListener("click", function () {
-  if (layers < 12) {
-    layers += 1;
-  }
-});
+// document.querySelectorAll("button")[4].addEventListener("click", function () {
+//   if (layers < 12) {
+//     layers += 1;
+//   }
+// });
 
-document.querySelectorAll("button")[9].addEventListener("click", function () {
-  if (layers > 1) {
-    layers -= 1;
-  }
-});
+// document.querySelectorAll("button")[9].addEventListener("click", function () {
+//   if (layers > 1) {
+//     layers -= 1;
+//   }
+// });
 
 //TO BE ACCESIBLE ON TOUCHSCREEN ALSO
 
-canvas.addEventListener("mousedown", function (e) {
-  isMouseDown = true;
+document.addEventListener("mousemove", function (e) {
+  pad.x = e.clientX - (window.innerWidth / 2 - 350);
   e.preventDefault;
 });
 
-canvas.addEventListener("mouseup", function (e) {
-  isMouseDown = false;
-  e.preventDefault;
-});
-
-canvas.addEventListener("mousemove", function (e) {
-  if (isMouseDown) {
-    pad.x = e.clientX - (window.innerWidth / 2 - 350);
-  }
-  e.preventDefault;
-});
+let BgMusic = new Audio("chase-8-bit-73312.mp3");
+BgMusic.loop = true;
+BgMusic.play();

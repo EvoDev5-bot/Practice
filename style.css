@@ -18,8 +18,8 @@ body{
 }
 
 #canvas{
-    width:700px;
-    height: 700px;
+    width:800px;
+    height: 800px;
     background-color: white;
     border-radius: 30px;
 }
