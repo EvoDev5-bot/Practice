@@ -1,8 +1,10 @@
 const canvas = document.querySelector("#canvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = 1200;
+canvas.width = 1800;
 canvas.height = 1200;
+
+let rand;
 
 let gameOn = true;
 
@@ -15,8 +17,6 @@ let layers = 5;
 
 let score = 0;
 
-let isMouseDown = false;
-
 let hitBricks = [];
 
 let bricks = [];
@@ -24,7 +24,10 @@ let bricks = [];
 let currentBrickX = 200;
 let currentBrickY = 120;
 
-const ball = {
+let ballOneIn = true;
+let ballTwoIn = false;
+
+let ball = {
   x: 200,
   y: canvas.height - 200,
   size: 20,
@@ -32,14 +35,84 @@ const ball = {
   dy: -8 * (3 / 4),
 };
 
-const pad = {
+let ball2 = {
+  x: 500,
+  y: canvas.height - 200,
+  size: 20,
+  dx: 8,
+  dy: -8 * (3 / 4),
+};
+
+let pad = {
   h: 10,
   w: 250,
   x: 200,
   speed: 10,
-  y: canvas.width - 100,
+  y: canvas.height - 100,
   dx: 0,
 };
+
+let imagePlus = {
+  h: 64,
+  w: 64,
+  x: Math.floor(Math.random() * (canvas.width - 40)) + 20,
+  y: -100,
+  dy: 0,
+  speed: 10,
+  imageURL: new Image(),
+};
+
+function reset() {
+  imagePlus = {
+    h: 64,
+    w: 64,
+    x: Math.floor(Math.random() * (canvas.width - 40)) + 20,
+    y: -100,
+    dy: 0,
+    speed: 10,
+    imageURL: new Image(),
+  };
+
+  pad = {
+    h: 10,
+    w: 250,
+    x: 200,
+    speed: 10,
+    y: canvas.height - 100,
+    dx: 0,
+  };
+
+  ball2 = {
+    x: 500,
+    y: canvas.height - 200,
+    size: 20,
+    dx: 8,
+    dy: -8 * (3 / 4),
+  };
+
+  ball = {
+    x: 200,
+    y: canvas.height - 200,
+    size: 20,
+    dx: 8,
+    dy: -8 * (3 / 4),
+  };
+
+  gameOn = true;
+  score = 0;
+
+  hitBricks = [];
+
+  bricks = [];
+
+  currentBrickX = 200;
+  currentBrickY = 120;
+
+  ballOneIn = true;
+  ballTwoIn = false;
+}
+
+imagePlus.imageURL.src = "icons8-plus-64.png";
 
 function drawCircle() {
   ctx.fillStyle = "lime";
@@ -49,21 +122,38 @@ function drawCircle() {
   ctx.fill();
 }
 
+function drawCircle2() {
+  ctx.fillStyle = "skyblue";
+  ctx.beginPath();
+  ctx.moveTo(ball2.x + ball2.size, ball2.y);
+  ctx.arc(ball2.x, ball2.y, ball2.size, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 function moveBall() {
   ball.x += ball.dx;
   ball.y += ball.dy;
 
-  if (ball.x + ball.size >= canvas.width || ball.x - ball.size <= 0) {
-    ball.dx *= -1;
+  if (ball.x - ball.size <= 0) {
+    ball.dx = Math.abs(ball.dx);
+  }
+  if (ball.x + ball.size >= canvas.width) {
+    ball.dx = Math.abs(ball.dx) * -1;
   }
 
-  if (ball.y + ball.size >= canvas.height || ball.y - ball.size <= 0) {
+  if (ball.y - ball.size <= 0) {
     ball.dy *= -1;
   }
 
   if (ball.y + ball.size >= canvas.height) {
-    score = 0;
-    hitBricks = [];
+    if (ballTwoIn) {
+      ball.y = Infinity;
+      ballOneIn = false;
+    } else {
+      ball.dy *= -1;
+      hitBricks = [];
+      score = 0;
+    }
   }
   if (
     ball.x + ball.size >= pad.x &&
@@ -71,13 +161,56 @@ function moveBall() {
     ball.y + ball.size >= pad.y &&
     ball.y <= pad.y + pad.h
   ) {
-    // ball.dx *= 1;
     ball.dy *= -1;
     impactMusic.play();
     if (ball.x > pad.x && ball.x < pad.x + pad.w / 2 - 50) {
       ball.dx *= -1;
     } else if (ball.x > pad.x && ball.x > pad.x + pad.w / 2 + 50) {
       ball.dx = ball.dx * -1;
+    }
+  }
+}
+
+function moveBall2() {
+  ball2.x += ball2.dx;
+  ball2.y += ball2.dy;
+
+  if (ball2.x - ball2.size <= 0) {
+    ball2.dx = Math.abs(ball2.dx);
+  }
+  if (ball2.x + ball2.size >= canvas.width) {
+    ball2.dx = Math.abs(ball2.dx) * -1;
+  }
+
+  if (ball2.y - ball2.size <= 0) {
+    ball2.dy *= -1;
+  }
+
+  if (ball2.y + ball2.size >= canvas.height) {
+    if (ballOneIn) {
+      ball2.y = Infinity;
+      ballTwoIn = false;
+    } else {
+      ball.y = 700;
+      ball.x = 200;
+      ballTwoIn = false;
+      ballOneIn = true;
+      score = 0;
+      hitBricks = [];
+    }
+  }
+  if (
+    ball2.x + ball2.size >= pad.x &&
+    ball2.x <= pad.x + pad.w &&
+    ball2.y + ball2.size >= pad.y &&
+    ball2.y <= pad.y + pad.h
+  ) {
+    ball2.dy *= -1;
+    impactMusic.play();
+    if (ball2.x > pad.x && ball2.x < pad.x + pad.w / 2 - 50) {
+      ball2.dx *= -1;
+    } else if (ball2.x > pad.x && ball2.x > pad.x + pad.w / 2 + 50) {
+      ball2.dx = ball2.dx * -1;
     }
   }
 }
@@ -133,7 +266,7 @@ function moveLeft() {
 }
 
 function createLayerOfBricks() {
-  for (let x = 0; x < 7; x++) {
+  for (let x = 0; x < 12; x++) {
     bricks.push({
       x: currentBrickX,
       y: currentBrickY,
@@ -185,6 +318,23 @@ function detectBrickCollision() {
   });
 }
 
+function detectBrickCollision2() {
+  bricks.forEach((brick, index) => {
+    if (
+      ball2.x + ball2.size >= brick.x &&
+      ball2.x <= brick.x + brick.w &&
+      ball2.y + ball2.size >= brick.y &&
+      ball2.y <= brick.y + brick.h
+    ) {
+      //   ball2.y += brick.h;s
+      ball2.dy *= -1;
+      hitBricks.push(index);
+      impactMusic.play();
+      score += 1;
+    }
+  });
+}
+
 function win() {
   document.querySelector("h2").innerText = "You Win! Refresh to start again";
   gameOn = false;
@@ -198,25 +348,80 @@ function drawRed() {
   ctx.fill();
 }
 
+function drawImage() {
+  ctx.beginPath();
+  ctx.moveTo(imagePlus.x, imagePlus.y);
+  ctx.drawImage(
+    imagePlus.imageURL,
+    imagePlus.x,
+    imagePlus.y,
+    imagePlus.w,
+    imagePlus.h
+  );
+}
+
+function moveImage() {
+  imagePlus.y += imagePlus.dy;
+
+  if (
+    imagePlus.x + imagePlus.w >= pad.x &&
+    imagePlus.x <= pad.x + pad.w &&
+    imagePlus.y + imagePlus.h >= pad.y &&
+    imagePlus.y <= pad.y + pad.h
+  ) {
+    ball2.x = pad.x;
+    ball2.y = canvas.height - 200;
+    imagePlus.y = -100;
+    imagePlus.dy = 0;
+    ballTwoIn = true;
+    ball2.dy = Math.abs(ball2.dy) * -1;
+  }
+
+  if (imagePlus.y >= canvas.height + 5) {
+    imagePlus.y = -100;
+    imagePlus.dy = 0;
+  }
+}
+
 function update() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (gameOn) {
-    drawCircle();
-    moveBall();
+  i = Math.floor(Math.random() * 5000);
 
+  if (gameOn) {
     drawPad();
     drawRed();
     movePad();
 
+    drawImage();
+    moveImage();
+
     drawBricks();
     detectBrickCollision();
 
+    if (ballOneIn) {
+      drawCircle();
+      moveBall();
+    }
+
+    if (ballTwoIn) {
+      detectBrickCollision2();
+      drawCircle2();
+      moveBall2();
+    }
+
     bricks = [];
+
+    if (i == 0) {
+      if (!ballTwoIn) {
+        console.log("hi");
+        imagePlus.dy = imagePlus.speed;
+      }
+    }
 
     document.querySelector("h2").innerText = "Score: " + score;
 
-    if (score == 35) {
+    if (score == 60) {
       document.querySelector("h2").innerText =
         "You Win! Refresh to start again";
 
@@ -229,6 +434,12 @@ function update() {
 
 document.addEventListener("keydown", keyDown);
 document.addEventListener("keyup", keyUp);
+
+document.addEventListener("click", function () {
+  if (!gameOn) {
+    reset();
+  }
+});
 
 update();
 
@@ -341,7 +552,7 @@ function increasePadSize() {
 //TO BE ACCESIBLE ON TOUCHSCREEN ALSO
 
 document.addEventListener("mousemove", function (e) {
-  pad.x = e.clientX - (window.innerWidth / 2 - 350);
+  pad.x = e.clientX;
   e.preventDefault;
 });
 
